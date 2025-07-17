@@ -1,0 +1,19 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout Confirm Page </title>
+</head>
+<body>
+    <h1>hey {{username}} are you sure  you want to logout from our community? </h1>
+    <p>By doing this your data, setting will also delete </p>
+
+    <form action="" method="post">
+
+        {% csrf_token %}
+        <input type="submit" value="Confirm Logut">
+        
+
+    </form>
+</body>
+</html>
