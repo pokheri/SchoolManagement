@@ -8,7 +8,7 @@
     
     <h1>Plesae Enter your registered email addresss </h1>
 
-    <form action="{% url 'accounts:password_reset_email' %}" method="post">
+    <form action="{% url 'password_reset_email' %}" method="post">
 
         {% csrf_token %}
         <input type="email" name="email" placeholder="registered email "><br>

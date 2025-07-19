@@ -1,69 +1,53 @@
-
-
 from django import forms
-from django.contrib.auth.models import User 
+from django.conf import settings
+from django.contrib.auth import(
+    get_user_model, 
+  
+) 
 from .models import (
-    Profile,
-
-
+    StudentProfile, 
+    TeacherProfile 
 )
 
-# user login form 
+User = get_user_model()
 
-
-
-class UserLoginForm(forms.Form):
-
-    username = forms.CharField(max_length=60 ,help_text="Enter your username Or email  ")
-    password  = forms.CharField(max_length=20, widget=forms.PasswordInput())
-
-
-
+class UserCreateForm(forms.ModelForm):
+    password =  forms.CharField(widget=forms.PasswordInput(),max_length=20)
+    password_2  = forms.CharField(widget=forms.PasswordInput(), max_length=20)
     
-class CreateUserForm(forms.ModelForm):
-
-    password = forms.CharField(
-        max_length=20, 
-        widget=forms.PasswordInput(attrs={'placeholder': "Enter password"})
-    )
-    password2 = forms.CharField(
-        max_length=20, 
-        widget=forms.PasswordInput(attrs={'placeholder': "Confirm password"})
-    )
-
-    class Meta:
-        model = User  
-        fields = ['username', 'email']
+    class Meta: 
+        model = User
+        fields = ['username', 'email', 'role']
 
     def clean(self):
-        cleaned_data = super().clean()
-        password = cleaned_data.get("password")
-        password2 = cleaned_data.get("password2")
+        data = super().clean()
+        ps = data['password']
+        ps2 = data['password_2']
+        if ps and ps2 and ps !=ps2 :
+            self.add_error('password', 'The password do not match ')
+        return data 
+    
+class UserLoginForm(forms.Form):
 
-        if password and password2 and password != password2:
-            self.add_error('password2', "Passwords do not match.")
-        return cleaned_data
-
+    username = forms.CharField(max_length=200)
+    password = forms.CharField(widget=forms.PasswordInput(), max_length=20)
 
 
 class PasswordChangeForm(forms.Form):
 
-    username  = forms.CharField(max_length=50,  help_text="Your username or email ")
-    password = forms.CharField(widget=forms.PasswordInput(), help_text="Current password ")
-    new_password = forms.CharField(widget=forms.PasswordInput(), help_text="New  password ")
+    username = forms.CharField(max_length=200)
+    password = forms.CharField(max_length=20, widget=forms.PasswordInput())
+    new_password = forms.CharField(max_length=20, widget=forms.PasswordInput())
 
 
     def clean(self):
-        cleaned_data = super().clean()
-        password = cleaned_data.get("new_password")
-     
+        data =  super().clean()
+        pas  = data.get('password')
+        pass2 = data.get('new_password')
 
-        if password and len(password)<12:
-            self.add_error('new_password', "Your password is less secure make sure you create a strong password more than 12 character ")
-        return cleaned_data
-
-
-from django import forms
+        if pas and pass2 and pas==pass2:
+            self.add_error('pass2', 'Please add new password ')
+        return data  
 
 class PasswordResetForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'New Password'}))
@@ -78,12 +62,18 @@ class PasswordResetForm(forms.Form):
             self.add_error('confirm_password', "Passwords do not match.")
 
 
-
-class ProfileForm(forms.ModelForm):
+class StudentProfileForm(forms.ModelForm):
 
     class Meta:
-        model = Profile
+        model = StudentProfile
         fields = '__all__'
         exclude = ['user']
+    
+class TeacherProfileForm(forms.ModelForm):
 
+    class Meta: 
+        model = TeacherProfile
+        fields = '__all__'
+        exclude = ['employee_id', 'user']
 
+    

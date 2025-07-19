@@ -1,25 +1,22 @@
 from django.db import models
-from django.contrib.auth.models import User 
+
 
 # Create your models here.
 from django.forms.formsets import formset_factory
 
 
 from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 
+User = settings.AUTH_USER_MODEL 
 
 class CustomUser(AbstractUser):
 
     class UserRole(models.TextChoices):
-        ST   = 'S', 'Staff'
         STU = 'ST', 'Student'
         T = 'T', 'Teacher'
 
     role = models.CharField(max_length=3, choices=UserRole, default=UserRole.STU)
-
-    
-
-
 
 class AbstractProfile(models.Model):
     """
@@ -32,7 +29,6 @@ class AbstractProfile(models.Model):
    
     gender = models.TextField(max_length=1, choices=Gender,default=Gender.M)
     age = models.PositiveSmallIntegerField()
-    email = models.CharField(max_length=100)
     father_name  = models.CharField(max_length=100)
     mother_name = models.CharField(max_length=100)
     image = models.ImageField(upload_to='users/images/', null=True, blank=True)
@@ -47,7 +43,7 @@ class AbstractProfile(models.Model):
 
 class StudentProfile(AbstractProfile):
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_profile')
     # classname
     #courses 
     # other information 
@@ -57,8 +53,8 @@ class StudentProfile(AbstractProfile):
 
 class  TeacherProfile(AbstractProfile):
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    employee_id  = models.BigAutoField(primary_key=True, unique=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='teacher_profile')
+    id  = models.BigAutoField(primary_key=True, unique=True)
     maried = models.BooleanField(default=False)
     salary= models.DecimalField(max_digits=10, decimal_places=2)
 
