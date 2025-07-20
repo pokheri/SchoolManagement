@@ -10,14 +10,31 @@ from django.conf import settings
 
 User = settings.AUTH_USER_MODEL 
 
+class FakeModel(models.Model):
+
+    class Meta: 
+        managed  = False
+        default_permissions = ()
+        permissions = [
+            ('is_admin', 'admin user only '), 
+            
+        ]
+
+
 class CustomUser(AbstractUser):
 
     class UserRole(models.TextChoices):
-        STU = 'ST', 'Student'
+        ST = 'ST', 'Student'
         T = 'T', 'Teacher'
 
-    role = models.CharField(max_length=3, choices=UserRole, default=UserRole.STU)
+    role = models.CharField(max_length=3, choices=UserRole, default=UserRole.ST)
+    
+    def get_profile(self):
 
+        if hasattr(self,'teacher_profile'):
+            return self.teacher_profile
+        return self.student_profile
+    
 class AbstractProfile(models.Model):
     """
      shared information of all users are here 
@@ -39,7 +56,7 @@ class AbstractProfile(models.Model):
     
     class Meta:
         abstract=True
-
+        
 
 class StudentProfile(AbstractProfile):
 
@@ -47,6 +64,11 @@ class StudentProfile(AbstractProfile):
     # classname
     #courses 
     # other information 
+    class Meta: 
+        permissions = [
+            ('my_profile', 'only profile user ')
+        ]
+
     def __str__(self):
         return f'Student {self.user.first_name}'
     
@@ -58,6 +80,12 @@ class  TeacherProfile(AbstractProfile):
     maried = models.BooleanField(default=False)
     salary= models.DecimalField(max_digits=10, decimal_places=2)
 
+
+    class Meta: 
+        permissions = [
+            ('my_profile', 'only profile user ')
+        ]
+        
     def __str__(self):
         return f'Teacher {self.user.first_name}'
     

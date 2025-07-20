@@ -4,6 +4,7 @@ from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
 from django import forms
 from django.conf import settings
+from guardian.mixins  import PermissionRequiredMixin as guardian_permissions 
 from django.contrib.auth import (
     get_user_model, 
     authenticate, 
@@ -12,7 +13,7 @@ from django.contrib.auth import (
 )
 from django.http import HttpResponse
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views import generic
 from django.views import View
 from .forms import (
@@ -30,8 +31,9 @@ from .models import (
 User = get_user_model()
 
 
-class CreateNewUser(View):
-
+class CreateNewUser(LoginRequiredMixin, PermissionRequiredMixin, View):
+    
+    permission_required = 'accounts.add_customuser'
     def get(self, request, *args, **kwargs):
         form = UserCreateForm()
         context = {
@@ -50,7 +52,7 @@ class CreateNewUser(View):
             user.save() 
             # based on the user role(student, teacher or staff ) we will redirect to the profile page 
             flag = 1 if  user.role=='ST' else 0 
-            return redirect('profile', flag=flag, user = user.id)
+            return redirect('profile', user_id=user.id)
             
             
         else:
@@ -58,9 +60,8 @@ class CreateNewUser(View):
         return  render(request, 'accounts/create_account.html', {'form': form})
     
 class  UserloginView(View):
+
     redirect_field_name = 'next'
-
-
     form = UserLoginForm()
     def get(self, request, *args, **kwargs):
         next_url = request.GET.get(self.redirect_field_name, "")
@@ -82,8 +83,6 @@ class  UserloginView(View):
             request.POST.get(self.redirect_field_name)
             or request.GET.get(self.redirect_field_name)
             )
-            
-
             user = authenticate(request,username=username, password=password)
             if user is not None:
                 login(request, user)
@@ -93,9 +92,6 @@ class  UserloginView(View):
             else: 
                 # if the credential are not correct 
                 messages.error(request, 'Oh there is problem the credential are not matching ')
-
-                
-                
         else:
             messages.error(request, "Please enter the correct credentials ")
 
@@ -107,7 +103,6 @@ class UserLogoutView(LoginRequiredMixin,View):
 
         return render(request, 'accounts/logout_confirm.html')
     
-
     def post(self, request, *args, **kwargs):
 
         logout(request)
@@ -147,6 +142,7 @@ class PasswordChangeView(View):
         return render(request, 'accounts/password_change.html', {"form": form})
 
 class PasswordResetView(generic.TemplateView):
+
     template_name = 'accounts/reset.html'
     
 class PasswordResetEmailView(View):
@@ -204,14 +200,15 @@ class ProfileView(View):
 
     def dispatch(self, request, *args, **kwargs):
 
-        self.flag = kwargs.get('flag')
+        
         self.user_id = kwargs.get('user_id')
         self.target_user = get_object_or_404(User, pk= self.user_id)
+        self.flag = self.target_user.role 
         return super().dispatch(request, *args, **kwargs)
     
     def get_form_class(self):
 
-        if self.flag ==1:
+        if self.flag =='ST':
             return  StudentProfileForm
         return TeacherProfileForm
     
@@ -229,7 +226,7 @@ class ProfileView(View):
 
     def post(self, request, *args, **kwargs):
 
-        if self.flag==1  and self.target_user:
+        if self.flag and  self.target_user:
             form = self.get_form_class()
             form = form(request.POST)
 
@@ -256,21 +253,21 @@ class ProfileView(View):
         context = self.get_custom_context(form)
         return render(request, 'profile/create_profile.html', context )
         
-class UpdateProfileView(LoginRequiredMixin, View):
+class UpdateProfileView(LoginRequiredMixin, guardian_permissions, View):
 
+    permission_required = 'accounts.my_profile'
 
     def dispatch(self, request, *args, **kwargs):
 
         self.user_id = kwargs.get('user_id')
         self.target_user =get_object_or_404(User, pk=self.user_id)
         self.flag = self.target_user.role 
-        if self.flag == 'ST':
-            self.profile =get_object_or_404(StudentProfile, user=self.user_id)
-        else:
-            self.profile = get_object_or_404(TeacherProfile, user=self.user_id)
-        
+        self.profile = self.target_user.get_profile()
         return super().dispatch(request, *args, **kwargs)
     
+    def get_object(self):
+        return self.target_user.get_profile()
+
     def get_form_class(self):
         if self.flag =='ST':
             return StudentProfileForm
@@ -296,7 +293,9 @@ class UpdateProfileView(LoginRequiredMixin, View):
             messages.error(request, 'the erorr accoured in the program ')
         return HttpResponse('what is going on man ')
     
-class DeleteUserView(generic.DeleteView):
+class DeleteUserView(PermissionRequiredMixin, generic.DeleteView):
+
+    permission_required = ('accounts.is_admin')
     model = User
     template_name= 'accounts/delete_user.html'
     success_url  = reverse_lazy('index')

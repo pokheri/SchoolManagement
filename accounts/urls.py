@@ -28,7 +28,7 @@ urlpatterns = [
     path('reset-password/', views.PasswordResetView.as_view(), name='password-reset'),
     path('reset-password-email/', views.PasswordResetEmailView.as_view(), name='password_reset_email'),
     path('reset-password/<int:uid>/', views.ResetPasswordView.as_view(), name='reset_password'),
-    path('profile/<str:flag>/<str:user_id>/', views.ProfileView.as_view(), name='profile'), 
+    path('profile/<str:user_id>/', views.ProfileView.as_view(), name='profile'), 
     path('update-profile/<str:user_id>/', views.UpdateProfileView.as_view(), name='update_profile'), 
     path('delete-user/<str:pk>/', views.DeleteUserView.as_view(),name='delete_user'), 
 
