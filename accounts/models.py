@@ -1,14 +1,14 @@
 from django.db import models
-
-
 # Create your models here.
 from django.forms.formsets import formset_factory
-
-
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
+from django.apps import apps
+
+
 
 User = settings.AUTH_USER_MODEL 
+
 
 class FakeModel(models.Model):
 
@@ -16,7 +16,7 @@ class FakeModel(models.Model):
         managed  = False
         default_permissions = ()
         permissions = [
-            ('is_admin', 'admin user only '), 
+            ('admin_only', 'admin user only '), 
             
         ]
 
@@ -26,8 +26,10 @@ class CustomUser(AbstractUser):
     class UserRole(models.TextChoices):
         ST = 'ST', 'Student'
         T = 'T', 'Teacher'
+        A = 'A', 'Admin'
 
-    role = models.CharField(max_length=3, choices=UserRole, default=UserRole.ST)
+
+    role = models.CharField(max_length=3, choices=UserRole, default=UserRole.A)
     
     def get_profile(self):
 
@@ -59,27 +61,24 @@ class AbstractProfile(models.Model):
         
 
 class StudentProfile(AbstractProfile):
-
+    
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_profile')
-    # classname
-    #courses 
-    # other information 
+    klass = models.ForeignKey('school.SchoolClass', on_delete=models.SET_NULL, null=True, blank=True, related_name='students')
+    
     class Meta: 
         permissions = [
             ('my_profile', 'only profile user ')
         ]
 
     def __str__(self):
-        return f'Student {self.user.first_name}'
+        return f'Student {self.user.username}'
     
 
 class  TeacherProfile(AbstractProfile):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='teacher_profile')
-    id  = models.BigAutoField(primary_key=True, unique=True)
-    maried = models.BooleanField(default=False)
+    married = models.BooleanField(default=False)
     salary= models.DecimalField(max_digits=10, decimal_places=2)
-
 
     class Meta: 
         permissions = [
@@ -87,7 +86,7 @@ class  TeacherProfile(AbstractProfile):
         ]
         
     def __str__(self):
-        return f'Teacher {self.user.first_name}'
+        return f'Teacher {self.user.username}'
     
     
 

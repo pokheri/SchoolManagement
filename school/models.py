@@ -14,87 +14,90 @@ class TimeStamp(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     update_at  = models.DateField(auto_now=True)
+    
+    class Meta:
+        abstract = True
+
+
+class SchoolClass(TimeStamp):
+
+    class SectionChoice(models.TextChoices):
+        A = 'A'
+        B = 'B'
+        C = 'C'
+
+    name = models.CharField(max_length=50)
+    section  = models.CharField(max_length=1, choices=SectionChoice)
+    class_teacher = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, limit_choices_to={'role': 'T'}, related_name='my_class')
+    class_coordinator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, limit_choices_to={'role': 'Stu'})
+    subjects = models.ManyToManyField('Subject', related_name='class_room')
+    location  = models.TextField()
+
+    class Meta:
+        unique_together = ['name', 'section']
+
+    def __str__(self):
+        return f'Class {self.name} - Section {self.section}'
 
 
 class Subject(TimeStamp):
 
-    subject_id = models.BigAutoField(primary_key=True)
-    subject_name = models.CharField(max_length=100)
-    # teacher 
+    name = models.CharField(max_length=100, unique=True)
+    code = models.CharField(max_length=5, unique=True)
 
     def __str__(self):
-        return f'{self.subject_name}'
-    
-class Course(TimeStamp):
-
-    course_id = models.BigAutoField(primary_key=True)
-    course_name = models.CharField(max_length=100)
-    duration  = models.CharField(max_length=10)
-
-    def __str__(self):
-        return f'{self.course_name}'
-
-class Enrollment(TimeStamp):
-    
-    student = models.OneToOneField(User, limit_choices_to={'role': 'STU'}, on_delete=models.CASCADE, related_name='enrollments')
-    class_room = models.ForeignKey('ClassRoom', on_delete=models.SET_NULL,null=True,  related_name='student_enrolled')
-    subjects = models.ManyToManyField(Subject)
-    courses = models.ManyToManyField('Course')
- 
-    class Meta:
-        unique_together = ('student', 'class_room')
-    def __str__(self):
-        return f'{self.student.first_name}, {self.class_room.class_name}'
-    
-class ClassRoom(TimeStamp):
-
-    class_id = models.BigAutoField(primary_key=True)
-    class_name = models.CharField(max_length=50, unique=True)
-    class_teacher = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, limit_choices_to={'role': 'T'}, related_name='my_class')
-    class_coordinator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, limit_choices_to={'role': 'Stu'})
-    location  = models.TextField()
-
-    def __str__(self):
-        return f'Class {self.class_name}'
+     return f'{self.code, self.name}'
     
 class Assignment( TimeStamp):
 
-
     def assignment_upload_path(instance, filename):
-        return f'assignments/class_{instance.class_name.class_name}/{filename}'
+        return f'assignments/class_{instance.class_name.name}/{filename}'
 
-    teacher   = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    class_name = models.ForeignKey(ClassRoom, on_delete=models.CASCADE)
+    title = models.CharField(max_length=50)
+    teacher   = models.ForeignKey(User,on_delete=models.CASCADE, limit_choices_to={'role': 'T'})
+    class_name = models.ForeignKey(SchoolClass, on_delete=models.CASCADE)
     subj = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='assignments')
     assignment_file = models.FileField(upload_to=assignment_upload_path)
     message = models.TextField(null=True, blank=True)
     last_date_sub  = models.DateTimeField()
     
     class Meta:
-        unique_together = ('class_name', 'subj')
+        constraints = [
+            models.UniqueConstraint(fields=['title', 'teacher', 'class_name'],
+                                    name='teacher_class_and_assignment_unique_together', 
+                                    violation_error_message="you can't do this same teacher with the same title ")
+        ]
 
     def __str__(self):
-        return f'Assignment {self.subj.subject_name}'
+        return f'Assignment {self.subj.name}'
     
-class TeacherAssignment(TimeStamp):
+
+class TeachingAssignment(TimeStamp):
 
     teacher = models.ForeignKey(User, limit_choices_to={'role': 'T'}, on_delete=models.CASCADE)
-    class_name = models.ForeignKey(ClassRoom, on_delete=models.CASCADE, related_name='teachers')
+    class_name = models.ForeignKey(SchoolClass, on_delete=models.CASCADE, related_name='teachers')
     subjects    = models.ManyToManyField(Subject,related_name='subject_teachers')
     
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['teacher', 'class_name'],
+                                     name='teacher_and_class_are_unique_togethter',
+                                     violation_error_message=' teacher and class name already assigned with all subjects that he/she gona teach to the class ' )
+        ]
     def __str__(self):
-        return f'{self.teacher.first_name} {self.teacher.last_name}'
+        return f'{self.teacher.username} {self.class_name.name}'
+    
 
     
 class AttandanceSession(TimeStamp):
 
     teacher = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    class_name = models.ForeignKey(ClassRoom, on_delete=models.CASCADE)
-    t_subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name= 'student_attandance')
+    class_name = models.ForeignKey(SchoolClass, on_delete=models.CASCADE)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name= 'student_attandance')
 
 
     class Meta: 
-        unique_together = ('teacher', 'class_name', 't_subject')
+        unique_together = ('teacher', 'class_name', 'subject', 'created_at')
 
 class AttandanceRecord(models.Model):
 
@@ -113,51 +116,32 @@ class AttandanceRecord(models.Model):
         return f'{self.student.first_name}'
 
 
-class SubjectMark(models.Model):
-
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-    marks = models.PositiveIntegerField()
-
-
-class ExamMark(TimeStamp):
-
-    student    = models.ForeignKey(User, limit_choices_to={'role': 'STU'}, on_delete=models.CASCADE, related_name='marks')
-    s_subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-    subject_marks = models.ManyToManyField(SubjectMark)
-
-
-    class Meta:
-        unique_together = ('student', 's_subject')
-    def __str__(self):
-        return f'{self.student.first_name} - {self.created_at}'
-    
 class AssignmentSubmission(TimeStamp):
 
-    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='my_submissions')
-    sub_assingment = models.ForeignKey(Assignment, on_delete = models.CASCADE, related_name='submissions')
-    file = models.FileField(upload_to='assignment/students')
-
-
+    def assignment_upload_path(instance, filename):
+        I = instance
+        s = I.student.first_name
+        cl  = I.assignment.class_name
+        cl    = cl.name +( cl.section )
+        sbj = I.assignment.subj.name
+        return f'{cl}/{sbj}/{s}/{filename}'
+    
+    student = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': 'ST'},  related_name='my_submissions')
+    assignment = models.ForeignKey(Assignment, on_delete = models.CASCADE, related_name='submissions')
+    file = models.FileField(upload_to=assignment_upload_path)
 
     def save(self,*args, **kwargs):
-        student  = AssignmentSubmission.objects.filter(student=self.student, assignment = self.assignment)
-        if student: 
+        assignment  = AssignmentSubmission.objects.filter(student=self.student, assignment = self.assignment)
+        if assignment: 
             # delete the previous submission and add new one to the database 
-            student.delete()
+            assignment.delete()
         return super().save(*args, **kwargs)
     
     def __str__(self):
-        return f'{self.created_at}'
+        return  self.student.first_name 
     
-class TimeTable(TimeStamp):
 
-    klass = models.OneToOneField(ClassRoom, on_delete=models.CASCADE, related_name='timetable')
-    time_table = models.FileField(upload_to = 'timetable/')
-
-
-    def __str__(self):
-        return f'{self.klass.class_name} time table '
-
+    
 
 
 

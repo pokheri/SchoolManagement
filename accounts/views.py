@@ -28,8 +28,16 @@ from .models import (
     StudentProfile, 
     TeacherProfile
 )
+from .signals import(
+    my_profile_permission_signal
+)
+
 User = get_user_model()
 
+
+class CustomException(Exception):
+    """ The custom Exception class """
+    pass 
 
 class CreateNewUser(LoginRequiredMixin, PermissionRequiredMixin, View):
     
@@ -56,7 +64,7 @@ class CreateNewUser(LoginRequiredMixin, PermissionRequiredMixin, View):
             
             
         else:
-            print('theree is someting wrong with the data ')
+            messages.error(request, 'We are getting some problem with user registration please enter the correct info. ')
         return  render(request, 'accounts/create_account.html', {'form': form})
     
 class  UserloginView(View):
@@ -91,7 +99,7 @@ class  UserloginView(View):
                 return redirect('index')
             else: 
                 # if the credential are not correct 
-                messages.error(request, 'Oh there is problem the credential are not matching ')
+                messages.error(request, 'Oh there is problem,  the credential are not matching ')
         else:
             messages.error(request, "Please enter the correct credentials ")
 
@@ -108,7 +116,7 @@ class UserLogoutView(LoginRequiredMixin,View):
         logout(request)
         return redirect('index')
     
-class PasswordChangeView(View):
+class PasswordChangeView(LoginRequiredMixin,View):
     
     def get(self, request, *args, **kwargs):
         form = PasswordChangeForm()
@@ -133,7 +141,7 @@ class PasswordChangeView(View):
                 user.save()
                 # password_changed.send(sender=user)
                 login(request,user)
-                messages.success(request, 'Password change successfuly ')
+                messages.success(request, 'Password changed successfuly ')
                 return redirect('index')
             else:
                 # if the user is none 
@@ -192,15 +200,14 @@ class ResetPasswordView(View):
             messages.success(request, 'Password reset successful.')
             return redirect('login')
 
-        messages.error(request, 'Please correct the errors below.')
+        messages.error(request, 'Enter the correct and strong password .')
         return render(request, 'accounts/reset_password_form.html', {'form': form})
 
 # by admin only 
-class ProfileView(View):
+class ProfileView(LoginRequiredMixin,View):
 
     def dispatch(self, request, *args, **kwargs):
 
-        
         self.user_id = kwargs.get('user_id')
         self.target_user = get_object_or_404(User, pk= self.user_id)
         self.flag = self.target_user.role 
@@ -223,10 +230,9 @@ class ProfileView(View):
         
         context =self.get_custom_context()
         return render(request, 'profile/create_profile.html', context )
-
+    
     def post(self, request, *args, **kwargs):
-
-        if self.flag and  self.target_user:
+        if self.flag and self.target_user:
             form = self.get_form_class()
             form = form(request.POST)
 
@@ -234,28 +240,20 @@ class ProfileView(View):
                 profile = form.save(commit=False)
                 profile.user = self.target_user
                 profile.save() 
-                return redirect('login')
-            else :
+                # for external functionality of differ model, do it here 
+                my_profile_permission_signal.send(sender=self.target_user, instance= profile) # signal 
+                return redirect('index')
+            else:
                 messages.error(request, "The form data is invalid please try again ")
                 context = self.get_custom_context(form)
-                return render(request, 'profile/create_profile.html', context )
-            
-        else:  # if the use is teacher 
-            form = self.get_form_class()
-            form = form(request.POST)
-            if form.is_valid():
-                profile = form.save(commit=False)
-                profile.user = self.target_user
-                profile.save()
-                return redirect('login')
-            else :
-                messages.error(request, 'Please Enter the  correct inforation ')
-        context = self.get_custom_context(form)
-        return render(request, 'profile/create_profile.html', context )
-        
+                return render(request, 'profile/create_profile.html', context)
+        else:
+            raise CustomException('Hey we are in the profile view and the error hit here ')
+
 class UpdateProfileView(LoginRequiredMixin, guardian_permissions, View):
 
     permission_required = 'accounts.my_profile'
+    raise_exception = True
 
     def dispatch(self, request, *args, **kwargs):
 
@@ -290,12 +288,12 @@ class UpdateProfileView(LoginRequiredMixin, guardian_permissions, View):
             form.save()
             return redirect('index')
         else: 
-            messages.error(request, 'the erorr accoured in the program ')
+            messages.error(request, 'Enter the correct data ')
         return HttpResponse('what is going on man ')
     
-class DeleteUserView(PermissionRequiredMixin, generic.DeleteView):
+class DeleteUserView(LoginRequiredMixin,PermissionRequiredMixin, generic.DeleteView):
 
-    permission_required = ('accounts.is_admin')
+    permission_required = ('accounts.admin_only')
     model = User
     template_name= 'accounts/delete_user.html'
     success_url  = reverse_lazy('index')

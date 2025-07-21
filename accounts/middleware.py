@@ -1,5 +1,7 @@
 #  The custom Middleware 
 from django.http import HttpResponse
+from django.shortcuts import redirect
+from django.urls import resolve
 
 class CustomMiddleWare:
 
@@ -31,25 +33,16 @@ class CustomMiddleWare:
         # it again started the middle chaining from the bottom to the up 
         return # the rendered template  
     
-class LogginUserInformation:
+class LoginRequiredMiddleware:
 
     def __init__(self, get_response):
         self.get_response = get_response
-        self.counter = 0
     
     def __call__(self,request,  *args, **kwds):
 
-        # loggin data of the user 
-        if request.user.username=='dine':
-            self.counter +=1    
-        response =self.get_response(request)
-        print(f'the user {request.user.username}, called this view ', self.counter, 'times ')
+        path = resolve(request.path_info).url_name
+        if not request.user.is_authenticated  and path!='login':
+            return redirect('login')
+        response = self.get_response(request)
         return response
-
-    def process_view(self, request, view_func, view_args, view_kwargs):
-
-        if self.counter > 10:
-            return HttpResponse('You reached the limit of access time ')
-        return None 
-    
 
