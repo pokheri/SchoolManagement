@@ -14,22 +14,6 @@ from django.template.loader import render_to_string
 password_changed = Signal()
 password_reset  = Signal()
 
-@receiver(post_save,sender=User)
-def user_model_save(sender, instance, created, **kwargs):
-
-    if created:
-
-        email = instance.email
-
-        subject = "You have successfuly created your account at my commnunity "
-        text_messasge = "Hey thanx again to be a part of us "
-        from_email = "mycommnunity@gmail.com"
-        to = [f'{instance.email}']
-
-        email_message = EmailMultiAlternatives(subject,text_messasge, from_email, to)
-        html_string = render_to_string('accounts/account_created_email.html', {"username": instance.username})
-        email_message.attach_alternative(html_string,'text/html')
-        email_message.send()
 
 @receiver(password_changed)
 def password_change_confirmation_email(sender, **kwargs):
@@ -78,7 +62,7 @@ def password_change_confirmation_email(sender, **kwargs):
 
 # automating the the object level permission assingment to the user who owned that profile 
 my_profile_permission_signal = Signal()
-
+account_registration_signal = Signal()
 
 @receiver(my_profile_permission_signal)
 def  automate_profile_permission(sender, instance, *ars, **kwargs):
@@ -94,6 +78,14 @@ def  automate_profile_permission(sender, instance, *ars, **kwargs):
 
     # assigning permission to the user 
     assign_perm(permission, user, instance)
+    account_registration_signal.send(sender=sender)
+
+
+@receiver(account_registration_signal)
+def successful_registration(sender, *args, **kwargs):
+
+    """ here we are  going to send the information to the user such as, there user id, password and other stff"""
+
     
 
 

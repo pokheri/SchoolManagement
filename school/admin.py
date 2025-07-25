@@ -7,13 +7,16 @@ from .models import (
     Assignment, 
     TeachingAssignment, 
     AssignmentSubmission,
+    Examination, 
+    ExamMarks,
+    SubjectMarks
 )
 
 
 @register(SchoolClass)
 class SchoolClassAdmin(admin.ModelAdmin):
 
-    list_display = ['name','get_section_display', 'class_teacher__first_name', 'class_coordinator__first_name','id']
+    list_display = ['name','get_section_display', 'class_teacher__first_name','id']
 
 @register(Subject)
 class SubjectAdmin(admin.ModelAdmin):
@@ -32,3 +35,6 @@ class TeachingAssignmentAdmin(admin.ModelAdmin):
 
 
 admin.site.register(AssignmentSubmission)
+admin.site.register(Examination)
+admin.site.register(SubjectMarks)
+admin.site.register(ExamMarks)
