@@ -1,0 +1,223 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{% static 'dist/css/adminlte.css' %}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
+  <style>
+    body { background: #f8fafc; }
+
+    .dashboard-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      padding: 2rem;
+      justify-content: center;
+    }
+
+    .small-box {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 400px;
+      height: 170px;
+      color: white;
+      border-radius: 8px;
+      padding: 1rem;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+
+    .small-box .inner h5 {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .small-box .small-box-footer {
+      display: block;
+      text-align: center;
+      padding: 5px 0;
+      background: rgba(0, 0, 0, 0.1);
+      color: #fff;
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    .small-box .small-box-footer:hover {
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .small-box-icon {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 40px;
+      opacity: 1;
+    }
+
+    .teacher-inner {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .teacher-inner p {
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .small-box.teacher-box .small-box-footer {
+      background: rgba(0, 0, 0, 0.08);
+    }
+    
+  </style>
+</head>
+<body class="hold-transition layout-fixed">
+
+  <!-- ✅ Navbar -->
+ <header class="app-header navbar navbar-expand bg-body shadow-sm">
+    <div class="container-fluid">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" data-lte-toggle="sidebar" href="#"><i class="bi bi-list"></i></a></li>
+        <li class="nav-item d-none d-md-block"><a class="nav-link" href="#">Home</a></li>
+        <li class="nav-item d-none d-md-block"><a class="nav-link" href="#">Contact</a></li>
+      </ul>
+
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" data-widget="navbar-search" href="#"><i class="bi bi-search"></i></a></li>
+
+        <!-- Messages Dropdown -->
+        <li class="nav-item dropdown">
+          <a class="nav-link" data-bs-toggle="dropdown" href="#"><i class="bi bi-chat-text"></i><span class="navbar-badge badge text-bg-danger">3</span></a>
+          <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
+            <span class="dropdown-item dropdown-header">3 Messages</span>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item">
+              <div class="d-flex">
+                <img src="{% static 'img/user1.jpg' %}" class="img-size-50 rounded-circle me-3" alt="User">
+                <div>
+                  <h6 class="dropdown-item-title">Brad Diesel <span class="float-end text-danger"><i class="bi bi-star-fill"></i></span></h6>
+                  <p class="text-sm">Call me whenever you can...</p>
+                  <p class="text-sm text-muted"><i class="bi bi-clock-fill me-1"></i> 4 Hours Ago</p>
+                </div>
+              </div>
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item dropdown-footer">See All Messages</a>
+          </div>
+        </li>
+
+        <!-- Notifications Dropdown -->
+        <li class="nav-item dropdown">
+          <a class="nav-link" data-bs-toggle="dropdown" href="#"><i class="bi bi-bell-fill"></i><span class="navbar-badge badge text-bg-warning">15</span></a>
+          <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
+            <span class="dropdown-item dropdown-header">15 Notifications</span>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item"><i class="bi bi-envelope me-2"></i> 4 new messages <span class="float-end text-secondary fs-7">3 mins</span></a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item dropdown-footer">See All Notifications</a>
+          </div>
+        </li>
+
+        <!-- Profile Dropdown -->
+        <li class="nav-item dropdown user-menu">
+          <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+            <img src="{% static 'dist/assets/img/sexy.jpg' %}" class="user-image rounded-circle shadow" alt="User">
+            <span class="d-none d-md-inline">Alexander</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
+            <li class="user-header text-bg-primary">
+              <img src="{% static 'dist/assets/img/sexy.jpg' %}" class="rounded-circle shadow" alt="User Image">
+              <p>Alexander Pierce - Student <small>Member since Jan 2023</small></p>
+            </li>
+            <li class="user-footer">
+              <a href="#" class="btn btn-default btn-flat">Profile</a>
+              <a href="#" class="btn btn-default btn-flat float-end">Sign out</a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ✅ Content -->
+  <div class="content-wrapper">
+    <section class="content pt-4">
+      <div class="dashboard-container">
+
+        <!-- ✅ Teacher Box (static format, info only) -->
+        <div class="small-box bg-primary teacher-box">
+          <div class="teacher-inner">
+            <h5>Class Teacher</h5>
+            <p><strong>Name:</strong> Mr. Ramesh Shrestha</p>
+            <p><strong>Phone:</strong> +91‑9876543210</p>
+            <p><strong>School Email:</strong> ramesh@school.edu</p>
+            <p><strong>Personal Email:</strong> ramesh.personal@gmail.com</p>
+          </div>
+          <i class="fas fa-user-tie small-box-icon"></i>
+   
+        </div>
+
+        <!-- ✅ Payment Box (standard box format) -->
+        <div class="small-box bg-success">
+          <div class="inner">
+            <h5>Payments</h5>
+            <p>Check due status</p>
+          </div>
+          <i class="fas fa-wallet small-box-icon"></i>
+          <a href="#" class="small-box-footer">View Details <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+
+        <!-- ✅ Rest of Boxes -->
+        <div class="small-box bg-info">
+          <div class="inner"><h5>My Subjects</h5><p>All enrolled subjects</p></div>
+          <i class="fas fa-book small-box-icon"></i>
+          <a href="#" class="small-box-footer">View Details <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+
+        <div class="small-box bg-danger">
+          <div class="inner"><h5>Examinations</h5><p>Schedule and Results</p></div>
+          <i class="fas fa-file-alt small-box-icon"></i>
+          <a href="#" class="small-box-footer">View Details <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+
+        <div class="small-box bg-warning text-dark">
+          <div class="inner"><h5>Request Documents</h5><p>Get certificates and letters</p></div>
+          <i class="fas fa-envelope-open small-box-icon"></i>
+          <a href="#" class="small-box-footer text-dark">View Details <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+
+        <div class="small-box bg-primary">
+          <div class="inner"><h5>Reports & Marks</h5><p>Academic performance</p></div>
+          <i class="fas fa-chart-bar small-box-icon"></i>
+          <a href="#" class="small-box-footer">View Details <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+
+        <div class="small-box bg-secondary">
+          <div class="inner"><h5>My Documents</h5><p>Download uploaded docs</p></div>
+          <i class="fas fa-folder small-box-icon" style=" color: rgba(249, 239, 239, 0.15);"></i>
+          <a href="#" class="small-box-footer">View Details <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+
+        <div class="small-box bg-dark">
+          <div class="inner"><h5>Help & Announcements</h5><p>News and support</p></div>
+          <i class="fas fa-bullhorn small-box-icon" style=" color: rgba(249, 239, 239, 0.15);"></i>
+          <a href="#" class="small-box-footer">View Details <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <!-- ✅ JS -->
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{% static 'dist/js/adminlte.js' %}"></script>
+</body>
+</html>
