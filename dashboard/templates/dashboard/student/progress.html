@@ -1,0 +1,160 @@
+{% extends './student_base.html' %}
+{% load static %}
+
+{% block title %}Student Progress{% endblock %}
+
+{% block body_header %}
+  Subject Progress 
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <!-- Attendance -->
+  <div class="col-md-3 col-sm-6 col-12">
+    <div class="info-box">
+      <span class="info-box-icon bg-success"><i class="bi bi-calendar-check"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">Attendance</span>
+        <span class="info-box-number">24 / 30 Days</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assignments -->
+  <div class="col-md-3 col-sm-6 col-12">
+    <div class="info-box">
+      <span class="info-box-icon bg-danger"><i class="bi bi-journal-text"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">Assignments</span>
+        <span class="info-box-number">8 / 10</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Discussions -->
+  <div class="col-md-3 col-sm-6 col-12">
+    <div class="info-box">
+      <span class="info-box-icon bg-info"><i class="bi bi-chat-dots"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">Discussions</span>
+        <span class="info-box-number">14 Participated</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quizzes -->
+  <div class="col-md-3 col-sm-6 col-12">
+    <div class="info-box">
+      <span class="info-box-icon bg-warning"><i class="bi bi-patch-question"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">Quizzes</span>
+        <span class="info-box-number">3 Completed</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Progress Recap (Pie Chart Style) -->
+<div class="card mb-4">
+  <div class="card-header">
+    <h3 class="card-title">Progress Summary (Compared to Last Month)</h3>
+    <div class="card-tools">
+      <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse">
+        <i data-lte-icon="expand" class="bi bi-plus-lg"></i>
+        <i data-lte-icon="collapse" class="bi bi-dash-lg"></i>
+      </button>
+      <button type="button" class="btn btn-tool" data-lte-toggle="card-remove">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-7">
+        <div class="d-flex justify-content-center">
+          <canvas id="progressPieChart" width="250" height="250"></canvas>
+        </div>
+      </div>
+
+      <div class="col-md-5">
+        <ul class="nav nav-pills flex-column mt-4">
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              Attendance
+              <span class="float-end text-success">
+                <i class="bi bi-arrow-up"></i> 6%
+              </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              Assignments
+              <span class="float-end text-danger">
+                <i class="bi bi-arrow-down"></i> 2%
+              </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              Discussions
+              <span class="float-end text-warning">
+                <i class="bi bi-arrow-up"></i> 4%
+              </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              Quizzes
+              <span class="float-end text-info">
+                <i class="bi bi-arrow-right"></i> 0%
+              </span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const ctx = document.getElementById('progressPieChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Attendance', 'Assignments', 'Discussions', 'Quizzes'],
+        datasets: [{
+          data: [35, 25, 20, 20], // In percentage
+          backgroundColor: [
+            '#28a745', // green - attendance
+            '#dc3545', // red - assignments
+            '#17a2b8', // blue - discussions
+            '#ffc107'  // yellow - quizzes
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                return `${context.label}: ${context.parsed}%`;
+              }
+            }
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}
